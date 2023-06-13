@@ -3,34 +3,52 @@ import Word from "./Word";
 
 const App: React.FC = () => {
   const [input, setInput] = useState("");
-  const [currentWord, setCurrentWord] = useState("");
+  const [words, setWords] = useState<string[]>([]);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [score, setScore] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-    fetchRandomWord();
-  }, []);
-
-  const fetchRandomWord = async () => {
+  const fetchRandomWords = async (count: number): Promise<string[]> => {
     try {
-      const response = await fetch("https://random-word-api.herokuapp.com/word");
+      const response = await fetch(`https://random-word-api.herokuapp.com/word?number=${count}`);
       const data = await response.json();
-      setCurrentWord(data[0]);
+      return data;
     } catch (error) {
-      console.log("Error fetching random word:", error);
+      console.log("Error fetching random words:", error);
+      return [];
     }
   };
+
+  const screenWidth = window.innerWidth;
+  const wordsPerLine = Math.floor(screenWidth / 150); // Adjust the number based on your styling
+
+  useEffect(() => {
+    const fetchWords = async () => {
+      const fetchedWords = await fetchRandomWords(wordsPerLine);
+      setWords(fetchedWords);
+      setCurrentWordIndex(0);
+    };
+
+    fetchWords();
+  }, [wordsPerLine]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
 
-    if (e.target.value.trim() === currentWord && e.target.value.endsWith(" ")) {
+    const typedWord = e.target.value.trim();
+    const currentCorrectWord = words[currentWordIndex];
+
+    if (typedWord === currentCorrectWord && e.target.value.endsWith(" ")) {
       setInput("");
       setScore((prevScore) => prevScore + 1);
-      fetchRandomWord();
+
+      fetchRandomWords(1).then((newWord) => {
+        const newWords = [...words];
+        newWords[currentWordIndex] = newWord[0];
+        setWords(newWords);
+      });
+
+      setCurrentWordIndex((prevIndex) => (prevIndex + 1) % wordsPerLine);
     }
   };
 
@@ -38,9 +56,9 @@ const App: React.FC = () => {
     <div className="App">
       <h1>Typing Game</h1>
       <p>Score: {score}</p>
-      <p>
-        <Word text={currentWord} isActive={true} />
-      </p>
+      {words.map((word, index) => (
+        <Word key={index} text={word} isActive={index === currentWordIndex} />
+      ))}
       <input
         ref={inputRef}
         type="text"

@@ -6,7 +6,8 @@ interface WordProps {
 }
 
 const Word: React.FC<WordProps> = ({ text, isActive }) => {
-  return <span className={isActive ? 'active' : ''}>{text}</span>
-}
+    return <span className={isActive ? 'active' : ''}>{text} </span>;
+  };
+  
 
 export default Word
