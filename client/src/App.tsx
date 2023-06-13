@@ -132,7 +132,7 @@ const App: React.FC = () => {
         type="text"
         value={input}
         onChange={handleInputChange}
-        className="mt-4 px-4 py-2 text-white bg-gray-800 rounded"
+        className="absolute w-0 h-0 opacity-0"
       />
     </div>
   );
