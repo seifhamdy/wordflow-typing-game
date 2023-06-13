@@ -32,25 +32,27 @@ const App: React.FC = () => {
     fetchWords();
   }, [wordsPerLine]);
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
-
+  
     const typedWord = e.target.value.trim();
     const currentCorrectWord = words[currentWordIndex];
-
+  
     if (typedWord === currentCorrectWord && e.target.value.endsWith(" ")) {
       setInput("");
       setScore((prevScore) => prevScore + 1);
-
-      fetchRandomWords(1).then((newWord) => {
-        const newWords = [...words];
-        newWords[currentWordIndex] = newWord[0];
-        setWords(newWords);
-      });
-
-      setCurrentWordIndex((prevIndex) => (prevIndex + 1) % wordsPerLine);
+  
+      const newWords = [...words];
+      newWords.splice(currentWordIndex, 1);
+      const fetchedWord = (await fetchRandomWords(1))[0]; // Await the promise and get the first word
+      newWords.push(fetchedWord);
+      setWords(newWords);
+  
+      setCurrentWordIndex((prevIndex) => Math.min(prevIndex, newWords.length - 1));
     }
   };
+  
+  
 
   return (
     <div className="App">
