@@ -88,15 +88,25 @@ const App: React.FC = () => {
     }
   }, [elapsedTime, wordCount]);
 
-  const handleInputMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
-    e.stopPropagation();
+  const handleDocumentMouseDown = (e: MouseEvent) => {
+    if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
+      e.preventDefault();
+    }
   };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleDocumentMouseDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentMouseDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, []);
+  });
 
   return (
     <div className="bg-black h-screen flex flex-col justify-center items-center">
@@ -122,7 +132,6 @@ const App: React.FC = () => {
         type="text"
         value={input}
         onChange={handleInputChange}
-        onMouseDown={handleInputMouseDown}
         className="mt-4 px-4 py-2 text-white bg-gray-800 rounded"
       />
     </div>
