@@ -30,12 +30,21 @@ const Word: React.FC<WordProps> = ({ text, isActive, typedInput, className }) =>
   const getDisplayedLetters = () => {
     const typedWord = typedInput.trim();
     const currentCorrectWord = text.trim();
+    const displayedLetters = [...currentCorrectWord];
 
-    if (!isActive) {
-      return text;
-    } else {
-      return typedWord.length >= currentCorrectWord.length ? typedWord : currentCorrectWord;
+    if (isActive) {
+      for (let i = 0; i < typedWord.length; i++) {
+        if (typedWord[i] !== currentCorrectWord[i]) {
+          if (i < currentCorrectWord.length) {
+            displayedLetters[i] = typedWord[i];
+          } else {
+            displayedLetters.push(typedWord[i]);
+          }
+        }
+      }
     }
+
+    return displayedLetters.join('');
   };
 
   return (
