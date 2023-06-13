@@ -1,28 +1,31 @@
-import React, { useState, useEffect, useRef, ChangeEvent } from "react";
-import Word from "./Word";
+import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
+import Word from './Word';
 
 const App: React.FC = () => {
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState('');
   const [words, setWords] = useState<string[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [wordCount, setWordCount] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [wordsPerMinute, setWordsPerMinute] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchRandomWords = async (count: number): Promise<string[]> => {
     try {
-      const response = await fetch(`https://random-word-api.herokuapp.com/word?number=${count}`);
+      const response = await fetch(
+        `https://random-word-api.herokuapp.com/word?number=${count}`
+      );
       const data = await response.json();
       return data;
     } catch (error) {
-      console.log("Error fetching random words:", error);
+      console.log('Error fetching random words:', error);
       return [];
     }
   };
 
-  const screenWidth = window.innerWidth;
-  const wordsPerLine = Math.floor(screenWidth / 150); // Adjust the number based on your styling
+  const wordsPerLine = 7; // Set the number of words per line
 
   useEffect(() => {
     const fetchWords = async () => {
@@ -36,53 +39,91 @@ const App: React.FC = () => {
 
   const handleInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
-  
+
+    if (!startTime) {
+      setStartTime(Date.now());
+    }
+
     const typedWord = e.target.value.trim();
     const currentCorrectWord = words[currentWordIndex];
-  
-    if (typedWord === currentCorrectWord && e.target.value.endsWith(" ")) {
-      setInput("");
+
+    if (typedWord === currentCorrectWord && e.target.value.endsWith(' ')) {
+      setInput('');
       setScore((prevScore) => prevScore + 1);
-  
+
       const newWords = [...words];
       newWords.splice(currentWordIndex, 1);
       const fetchedWord = (await fetchRandomWords(1))[0];
       newWords.push(fetchedWord);
       setWords(newWords);
-  
-      setCurrentWordIndex((prevIndex) => Math.min(prevIndex, newWords.length - 1));
+
+      setCurrentWordIndex((prevIndex) =>
+        Math.min(prevIndex, newWords.length - 1)
+      );
       setWordCount((prevCount) => prevCount + 1);
     }
   };
-  
 
   useEffect(() => {
     if (startTime !== null) {
-      const elapsedTime = Date.now() - startTime;
-      const minutes = elapsedTime / 1000 / 60;
-      const wpm = Math.round(wordCount / minutes);
-      console.log("WPM:", wpm);
-    }
-  }, [startTime, wordCount]);
+      const interval = setInterval(() => {
+        const elapsedTimeInSeconds = Math.floor(
+          (Date.now() - startTime) / 1000
+        );
+        setElapsedTime(elapsedTimeInSeconds);
+      }, 1000);
 
-  const handleInputFocus = () => {
-    setStartTime(Date.now());
+      return () => clearInterval(interval);
+    }
+  }, [startTime]);
+
+  useEffect(() => {
+    if (elapsedTime > 0 && wordCount > 0) {
+      const wordsPerMinuteValue = Math.round(
+        (wordCount / elapsedTime) * 60
+      );
+      setWordsPerMinute(wordsPerMinuteValue);
+    } else {
+      setWordsPerMinute(0);
+    }
+  }, [elapsedTime, wordCount]);
+
+  const handleInputMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
+    e.stopPropagation();
   };
 
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   return (
-    <div className="App">
-      <h1>Typing Game</h1>
-      <p>Score: {score}</p>
-      <p>Words per Minute: {Math.round((wordCount / ((Date.now() - (startTime || Date.now())) / 1000 / 60))) || 0}</p>
-      {words.map((word, index) => (
-        <Word key={index} text={word} isActive={index === currentWordIndex} />
-      ))}
+    <div className="bg-black h-screen flex flex-col justify-center items-center">
+      <h1 className="text-white text-3xl font-bold mb-4">Typing Game</h1>
+      <p className="text-white">Score: {score}</p>
+      <p className="text-white">Words per Minute: {wordsPerMinute}</p>
+      <div className="flex justify-center mt-4">
+        {words.map((word, index) => (
+          <React.Fragment key={index}>
+            <Word
+              text={word}
+              isActive={index === currentWordIndex}
+              className={
+                index === currentWordIndex ? 'text-white' : 'text-gray-400'
+              }
+            />
+            &nbsp;
+          </React.Fragment>
+        ))}
+      </div>
       <input
         ref={inputRef}
         type="text"
         value={input}
         onChange={handleInputChange}
-        onFocus={handleInputFocus}
+        onMouseDown={handleInputMouseDown}
+        className="mt-4 px-4 py-2 text-white bg-gray-800 rounded"
       />
     </div>
   );
