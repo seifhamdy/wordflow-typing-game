@@ -97,8 +97,8 @@ function App() {
       const extraLetters = isCurrentWord ? userInput.slice(word.length) : '';
   
       const renderedWord: JSX.Element[] = [];
-      for (let j = 0; j < word.length + extraLetters.length; j++) {
-        const letter = j < word.length ? word[j] : extraLetters[j - word.length];
+      for (let j = 0; j < word.length; j++) {
+        const letter = word[j];
         const isCurrentLetter = isCurrentWord && j === currentLetterIndex;
         const isCorrectLetter =
           isCurrentWord &&
@@ -133,6 +133,30 @@ function App() {
         );
       }
   
+      // Render extra letters in red color
+      for (let k = word.length; k < word.length + extraLetters.length; k++) {
+        const letter = extraLetters[k - word.length];
+        const isCurrentLetter = isCurrentWord && k === currentLetterIndex;
+        const isIncorrectLetter = isCurrentWord && letter !== undefined;
+  
+        renderedWord.push(
+          <span
+            key={k}
+            className={`inline-block ${
+              isCurrentLetter
+                ? 'bg-yellow-200'
+                : isIncorrectLetter
+                ? 'text-red-500'
+                : 'text-black'
+            }`}
+          >
+            <span className={isCurrentLetter ? 'animate-blink' : ''}>
+              {isIncorrectLetter ? letter : ''}
+            </span>
+          </span>
+        );
+      }
+  
       renderedWords.push(
         <span
           key={i}
@@ -146,7 +170,7 @@ function App() {
     }
   
     return renderedWords;
-  };
+  };  
 
   return (
     <div
