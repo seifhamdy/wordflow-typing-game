@@ -4,16 +4,26 @@
 
 @keyframes blink {
   0% {
-    opacity: 1;
-  }
-  50% {
     opacity: 0;
   }
-  100% {
+  50% {
     opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
 .animate-blink {
-  animation: blink 1s infinite;
+  animation: blink 0.7s infinite;
+}
+
+.text-green-500 {
+  --tw-text-opacity: 1;
+  color: rgba(52, 211, 153, var(--tw-text-opacity));
+}
+
+.text-red-500 {
+  --tw-text-opacity: 1;
+  color: rgba(239, 68, 68, var(--tw-text-opacity));
 }
