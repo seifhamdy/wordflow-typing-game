@@ -1,13 +1,15 @@
 import React from 'react';
+import "./index.css"
 
 interface WordProps {
   text: string;
   isActive: boolean;
   typedInput: string;
+  currentLetterIndex: number;
   className?: string;
 }
 
-const Word: React.FC<WordProps> = ({ text, isActive, typedInput, className }) => {
+const Word: React.FC<WordProps> = ({ text, isActive, typedInput, currentLetterIndex, className }) => {
   const getLetterColor = (index: number) => {
     if (!isActive) {
       return 'text-gray-400';
@@ -19,7 +21,11 @@ const Word: React.FC<WordProps> = ({ text, isActive, typedInput, className }) =>
     const correctLetters = currentCorrectWord.split('');
 
     if (typedLetters.length <= index) {
-      return 'text-white';
+      if (index === currentLetterIndex) {
+        return 'text-white cursor-blink'; // Add the 'cursor-blink' class to make the cursor visible
+      } else {
+        return 'text-white';
+      }
     } else if (typedLetters[index] === correctLetters[index]) {
       return 'text-green-500';
     } else {

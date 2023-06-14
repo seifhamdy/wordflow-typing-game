@@ -10,6 +10,7 @@ const App: React.FC = () => {
   const [wordCount, setWordCount] = useState(0)
   const [elapsedTime, setElapsedTime] = useState<number>(0)
   const [wordsPerMinute, setWordsPerMinute] = useState(0)
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const fetchRandomWords = async (count: number): Promise<string[]> => {
@@ -61,6 +62,9 @@ const App: React.FC = () => {
         Math.min(prevIndex, newWords.length - 1)
       )
       setWordCount((prevCount) => prevCount + 1)
+      setCurrentLetterIndex(0)
+    } else {
+      setCurrentLetterIndex(typedWord.length)
     }
   }
 
@@ -116,6 +120,7 @@ const App: React.FC = () => {
               text={word}
               isActive={index === currentWordIndex}
               typedInput={input}
+              currentLetterIndex={currentLetterIndex}
               className={
                 index === currentWordIndex ? 'text-white' : 'text-gray-400'
               }
@@ -134,5 +139,6 @@ const App: React.FC = () => {
     </div>
   )
 }
+
 
 export default App
