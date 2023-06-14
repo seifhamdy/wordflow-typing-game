@@ -1,143 +1,140 @@
-import React, { useState, useEffect, ChangeEvent, useRef } from 'react'
-import Word from './Word'
+import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 
-const App: React.FC = () => {
-  const [input, setInput] = useState('')
-  const [words, setWords] = useState<string[]>([])
-  const [currentWordIndex, setCurrentWordIndex] = useState(0)
-  const [score, setScore] = useState(0)
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [wordCount, setWordCount] = useState(0)
-  const [elapsedTime, setElapsedTime] = useState<number>(0)
-  const [wordsPerMinute, setWordsPerMinute] = useState(0)
-  const [currentLetterIndex, setCurrentLetterIndex] = useState(0)
-  const inputRef = useRef<HTMLInputElement>(null)
+const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10'; // API endpoint to fetch random words
+const wordWidth = 200; // Width of each word in pixels
 
-  const fetchRandomWords = async (count: number): Promise<string[]> => {
-    try {
-      const response = await fetch(
-        `https://random-word-api.herokuapp.com/word?number=${count}`
-      )
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.log('Error fetching random words:', error)
-      return []
-    }
-  }
-
-  const wordsPerLine = 7 // Set the number of words per line
+function App() {
+  const [words, setWords] = useState<string[]>([]);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
+  const [userInput, setUserInput] = useState('');
+  const [score, setScore] = useState(0);
+  const [maxWordsInLine, setMaxWordsInLine] = useState(0);
+  const wordRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchWords = async () => {
-      const fetchedWords = await fetchRandomWords(wordsPerLine)
-      setWords(fetchedWords)
-      setCurrentWordIndex(0)
-    }
-
-    fetchWords()
-  }, [wordsPerLine])
-
-  const handleInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value)
-
-    if (!startTime) {
-      setStartTime(Date.now())
-    }
-
-    const typedWord = e.target.value.trim()
-    const currentCorrectWord = words[currentWordIndex]
-
-    if (typedWord === currentCorrectWord && e.target.value.endsWith(' ')) {
-      setInput('')
-      setScore((prevScore) => prevScore + 1)
-
-      const newWords = [...words]
-      newWords.splice(currentWordIndex, 1)
-      const fetchedWord = (await fetchRandomWords(1))[0]
-      newWords.push(fetchedWord)
-      setWords(newWords)
-
-      setCurrentWordIndex((prevIndex) =>
-        Math.min(prevIndex, newWords.length - 1)
-      )
-      setWordCount((prevCount) => prevCount + 1)
-      setCurrentLetterIndex(0)
-    } else {
-      setCurrentLetterIndex(typedWord.length)
-    }
-  }
-
-  useEffect(() => {
-    if (startTime !== null) {
-      const interval = setInterval(() => {
-        const elapsedTimeInSeconds = Math.floor((Date.now() - startTime) / 1000)
-        setElapsedTime(elapsedTimeInSeconds)
-      }, 1000)
-
-      return () => clearInterval(interval)
-    }
-  }, [startTime])
-
-  useEffect(() => {
-    if (elapsedTime > 0 && wordCount > 0) {
-      const wordsPerMinuteValue = Math.round((wordCount / elapsedTime) * 60)
-      setWordsPerMinute(wordsPerMinuteValue)
-    } else {
-      setWordsPerMinute(0)
-    }
-  }, [elapsedTime, wordCount])
-
-  const handleDocumentMouseDown = (e: MouseEvent) => {
-    if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
-      e.preventDefault()
-    }
-  }
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleDocumentMouseDown)
-
+    fetchWords();
+    calculateMaxWordsInLine();
+    window.addEventListener('resize', calculateMaxWordsInLine);
     return () => {
-      document.removeEventListener('mousedown', handleDocumentMouseDown)
-    }
-  }, [])
+      window.removeEventListener('resize', calculateMaxWordsInLine);
+    };
+  }, []);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
+    setCurrentLetterIndex(0);
+    setUserInput('');
+  }, [currentWordIndex]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === ' ') {
+        event.preventDefault();
+        checkUserInput();
+      } else if (event.key === 'Backspace' && userInput.length > 0) {
+        setUserInput(userInput.slice(0, -1));
+        setCurrentLetterIndex(currentLetterIndex - 1);
+      } else if (event.key.length === 1 && /^[a-zA-Z]+$/.test(event.key)) {
+        setUserInput(userInput + event.key);
+        setCurrentLetterIndex(currentLetterIndex + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentWordIndex, userInput, currentLetterIndex]);
+
+  const fetchWords = async () => {
+    try {
+      const response = await axios.get(apiUrl);
+      setWords(response.data);
+    } catch (error) {
+      console.error('Error fetching words:', error);
     }
-  })
+  };
+
+  const checkUserInput = () => {
+    const currentWord = words[currentWordIndex];
+    if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
+      setCurrentWordIndex(currentWordIndex + 1);
+      setScore(score + 1);
+    }
+  };
+
+  useEffect(() => {
+    if (wordRef.current) {
+      wordRef.current.focus();
+    }
+  }, [currentWordIndex]);
+
+  const calculateMaxWordsInLine = () => {
+    const availableWidth = window.innerWidth * 0.9; // Use 90% of the window width
+    const maxWords = Math.floor(availableWidth / wordWidth);
+    setMaxWordsInLine(maxWords);
+  };
+
+  const renderWordsInLine = () => {
+    const renderedWords: JSX.Element[] = [];
+    for (let i = 0; i < maxWordsInLine && i < words.length; i++) {
+      const word = words[i];
+      const isCurrentWord = i === currentWordIndex;
+      const isActive = isCurrentWord && currentLetterIndex < word.length;
+  
+      const renderedWord: JSX.Element[] = [];
+      for (let j = 0; j < word.length; j++) {
+        const letter = word[j];
+        const isCurrentLetter = isCurrentWord && j === currentLetterIndex;
+  
+        renderedWord.push(
+          <span
+            key={j}
+            className={`inline-block ${
+              isCurrentLetter ? 'bg-yellow-200' : 'text-black'
+            }`}
+          >
+            <span
+              className={`${
+                isCurrentLetter ? 'animate-blink' : ''
+              }`}
+            >
+              {letter}
+            </span>
+          </span>
+        );
+      }
+  
+      renderedWords.push(
+        <span
+          key={i}
+          className={`mr-2 ${
+            isCurrentWord ? 'font-bold text-black' : 'text-gray-500'
+          }`}
+        >
+          {renderedWord}
+        </span>
+      );
+    }
+  
+    return renderedWords;
+  };
 
   return (
-    <div className="bg-black h-screen flex flex-col justify-center items-center">
-      <h1 className="text-white text-3xl font-bold mb-4">Typing Game</h1>
-      <p className="text-white">Score: {score}</p>
-      <p className="text-white">Words per Minute: {wordsPerMinute}</p>
-      <div className="flex justify-center mt-4">
-        {words.map((word, index) => (
-          <React.Fragment key={index}>
-            <Word
-              text={word}
-              isActive={index === currentWordIndex}
-              typedInput={input}
-              currentLetterIndex={currentLetterIndex}
-              className={
-                index === currentWordIndex ? 'text-white' : 'text-gray-400'
-              }
-            />
-            &nbsp;
-          </React.Fragment>
-        ))}
+    <div
+      className="flex justify-center items-center h-screen"
+      tabIndex={0}
+      ref={wordRef as React.RefObject<HTMLDivElement>}
+    >
+      <div className="text-4xl text-center">
+        <div>
+          Score: <span className="font-bold">{score}</span>
+        </div>
+        <div className="flex space-x-2">{renderWordsInLine()}</div>
       </div>
-      <input
-        ref={inputRef}
-        type="text"
-        value={input}
-        onChange={handleInputChange}
-        className="absolute w-0 h-0 opacity-0"
-      />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
