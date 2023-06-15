@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
 import './index.css'
 
-
 const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10' // API endpoint to fetch random words
 const wordWidth = 200 // Width of each word in pixels
 const fetchThreshold = 5 // Number of words remaining when new fetch is triggered
@@ -82,16 +81,15 @@ function App() {
   const [maxWordsInLine, setMaxWordsInLine] = useState(0)
   const wordRef = useRef<HTMLDivElement>(null)
   const idleTimer = useRef<NodeJS.Timeout | null>(null)
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [typingStarted, setTypingStarted] = useState(false);
-  const [lastWordCompletionTime, setLastWordCompletionTime] = useState<number | null>(null);
-  const [firstWordCompletionTime, setFirstWordCompletionTime] = useState<number | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-
-  
-
-
+  const [containerWidth, setContainerWidth] = useState(0)
+  const [typingStarted, setTypingStarted] = useState(false)
+  const [lastWordCompletionTime, setLastWordCompletionTime] = useState<
+    number | null
+  >(null)
+  const [firstWordCompletionTime, setFirstWordCompletionTime] = useState<
+    number | null
+  >(null)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
     fetchWords()
@@ -108,28 +106,27 @@ function App() {
   }, [currentWordIndex])
 
   useEffect(() => {
-    
-const checkUserInput = () => {
-  const currentWord = words[currentWordIndex];
-  if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
-    if (score === 0) {
-      // Record completion time of the first word
-      setFirstWordCompletionTime(Date.now());
-    } else {
-      // Record completion time of subsequent words
-      setLastWordCompletionTime(Date.now());
-    }
+    const checkUserInput = () => {
+      const currentWord = words[currentWordIndex]
+      if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
+        if (score === 0) {
+          // Record completion time of the first word
+          setFirstWordCompletionTime(Date.now())
+        } else {
+          // Record completion time of subsequent words
+          setLastWordCompletionTime(Date.now())
+        }
 
-    setCurrentWordIndex((prevIndex) => prevIndex + 1);
-    setScore((prevScore) => prevScore + 1);
-    setUserInput('');
-    setCurrentLetterIndex(0);
-  }
-};
+        setCurrentWordIndex((prevIndex) => prevIndex + 1)
+        setScore((prevScore) => prevScore + 1)
+        setUserInput('')
+        setCurrentLetterIndex(0)
+      }
+    }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!typingStarted) {
-        setTypingStarted(true);
-      }    
+        setTypingStarted(true)
+      }
       if (event.key === ' ') {
         event.preventDefault()
         checkUserInput()
@@ -147,7 +144,14 @@ const checkUserInput = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [currentWordIndex, userInput, currentLetterIndex, words, typingStarted, score])
+  }, [
+    currentWordIndex,
+    userInput,
+    currentLetterIndex,
+    words,
+    typingStarted,
+    score,
+  ])
 
   useEffect(() => {
     if (wordRef.current) {
@@ -163,36 +167,43 @@ const checkUserInput = () => {
 
   useEffect(() => {
     const stopWPMCounter = () => {
-      if (firstWordCompletionTime !== null && lastWordCompletionTime !== null && score > 1) {
-        const duration = (lastWordCompletionTime - firstWordCompletionTime) / 1000; // Duration in seconds
-        const wpm = Math.round((score - 1) / (duration / 60)); // Subtract 1 to exclude the first incomplete word
-        setWPM(wpm);
+      if (
+        firstWordCompletionTime !== null &&
+        lastWordCompletionTime !== null &&
+        score > 1
+      ) {
+        const duration =
+          (lastWordCompletionTime - firstWordCompletionTime) / 1000 // Duration in seconds
+        const wpm = Math.round((score - 1) / (duration / 60)) // Subtract 1 to exclude the first incomplete word
+        setWPM(wpm)
       }
-    };
-  
+    }
+
     if (score === 0 && typingStarted) {
       // Start the WPM counter when the user starts typing
-      setStartTime(Date.now());
-      setFirstWordCompletionTime(null);
-      setLastWordCompletionTime(null);
-      idleTimer.current = setInterval(stopWPMCounter, idleTimeout);
+      setStartTime(Date.now())
+      setFirstWordCompletionTime(null)
+      setLastWordCompletionTime(null)
+      idleTimer.current = setInterval(stopWPMCounter, idleTimeout)
     } else if (score > 0 && idleTimer.current !== null) {
       // Restart the WPM counter if the user continues typing
-      clearInterval(idleTimer.current);
-      idleTimer.current = setInterval(stopWPMCounter, idleTimeout);
+      clearInterval(idleTimer.current)
+      idleTimer.current = setInterval(stopWPMCounter, idleTimeout)
     }
-  
+
     // Cleanup timer on unmount
     return () => {
       if (idleTimer.current !== null) {
-        clearInterval(idleTimer.current);
+        clearInterval(idleTimer.current)
       }
-    };
-  }, [score, typingStarted, firstWordCompletionTime, lastWordCompletionTime, startTime]);
-  
-  
-  
-  
+    }
+  }, [
+    score,
+    typingStarted,
+    firstWordCompletionTime,
+    lastWordCompletionTime,
+    startTime,
+  ])
 
   useEffect(() => {
     return () => {
@@ -203,13 +214,12 @@ const checkUserInput = () => {
     }
   }, [])
 
-
   const fetchWords = async () => {
-    setIsLoaded(false);
+    setIsLoaded(false)
     try {
       const response = await axios.get(apiUrl)
       setWords((prevWords) => [...prevWords, ...response.data])
-      setIsLoaded(true);
+      setIsLoaded(true)
     } catch (error) {
       console.error('Error fetching words:', error)
     }
@@ -222,10 +232,10 @@ const checkUserInput = () => {
   }
 
   useEffect(() => {
-    const longestWordLength = Math.max(...words.map((word) => word.length));
-    const containerWidth = longestWordLength * wordWidth;
-    setContainerWidth(containerWidth);
-  }, [words]);
+    const longestWordLength = Math.max(...words.map((word) => word.length))
+    const containerWidth = longestWordLength * wordWidth
+    setContainerWidth(containerWidth)
+  }, [words])
 
   const renderWordsInLine = () => {
     const renderedWords: JSX.Element[] = []
@@ -312,27 +322,30 @@ const checkUserInput = () => {
       ref={wordRef as React.RefObject<HTMLDivElement>}
     >
       <div className="text-4xl text-center">
-      {isLoaded && (
-        <>
-          <div
-          className="flex justify-start"
-          style={{ marginLeft: `${window.innerWidth * 0.125}px` }}
-        >
-          WPM: <span className="font-bold">{wpm}</span>
-        </div>
-        <div
-          className="flex space-x-2 justify-start"
-          style={{ marginLeft: `${window.innerWidth * 0.125}px`, width: `${containerWidth}px`}}
-        >
-          {renderWordsInLine()}
-        </div>
-        <Caret
-          currentLetterIndex={currentLetterIndex}
-          wordIndex={currentWordIndex}
-          words={words}
-        />
-        </>
-      )}
+        {isLoaded && (
+          <>
+            <div
+              className="flex justify-start"
+              style={{ marginLeft: `${window.innerWidth * 0.125}px` }}
+            >
+              WPM: <span className="font-bold">{wpm}</span>
+            </div>
+            <div
+              className="flex space-x-2 justify-start"
+              style={{
+                marginLeft: `${window.innerWidth * 0.125}px`,
+                width: `${containerWidth}px`,
+              }}
+            >
+              {renderWordsInLine()}
+            </div>
+            <Caret
+              currentLetterIndex={currentLetterIndex}
+              wordIndex={currentWordIndex}
+              words={words}
+            />
+          </>
+        )}
       </div>
     </div>
   )
