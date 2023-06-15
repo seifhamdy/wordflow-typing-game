@@ -81,8 +81,8 @@ function App() {
   const [containerWidth, setContainerWidth] = useState(0)
   const [typingStarted, setTypingStarted] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [startTime, setStartTime] = useState(Date.now());
-
+  const [startTime, setStartTime] = useState(Date.now())
+  const [completedWordIndex, setCompletedWordIndex] = useState(-1)
 
   useEffect(() => {
     fetchWords()
@@ -100,23 +100,26 @@ function App() {
 
   useEffect(() => {
     const updateWPM = () => {
-      const currentTime = Date.now();
-    const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
-    const averageWPM = Math.round((score / elapsedTime) * 60);
-    setWPM(averageWPM);
-    };
-  
-    const timer = setInterval(updateWPM, 1000); // Update the WPM every second
-  
-    return () => clearInterval(timer);
+      const currentTime = Date.now()
+      const elapsedTime = (currentTime - startTime) / 1000 // Elapsed time in seconds
+      const averageWPM = Math.round((score / elapsedTime) * 60)
+      setWPM(averageWPM)
+    }
+
+    const timer = setInterval(updateWPM, 1000) // Update the WPM every second
+
+    return () => clearInterval(timer)
   }, [startTime, score])
 
   useEffect(() => {
     const checkUserInput = () => {
       const currentWord = words[currentWordIndex]
       if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
-
-        setCurrentWordIndex((prevIndex) => prevIndex + 1)
+        setCompletedWordIndex(currentWordIndex)
+        setTimeout(() => {
+          setCurrentWordIndex((prevIndex) => prevIndex + 1)
+          setCompletedWordIndex(-1)
+        }, 2000)
         setScore((prevScore) => prevScore + 1)
         setUserInput('')
         setCurrentLetterIndex(0)
@@ -125,7 +128,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!typingStarted) {
         setTypingStarted(true)
-        setStartTime(Date.now());
+        setStartTime(Date.now())
       }
       if (event.key === ' ') {
         event.preventDefault()
@@ -255,7 +258,13 @@ function App() {
         <span
           key={i}
           className={`mr-2 ${
-            isCurrentWord ? 'font-bold text-black' : 'text-gray-500'
+            isCurrentWord ? 'font-bold text-black ' : 'text-gray-500'
+          } ${
+            completedWordIndex === i + currentWordIndex
+              ? 'animate-complete'
+              : completedWordIndex !== -1
+              ? 'animate-slide-out'
+              : ''
           }`}
         >
           {renderedWord}

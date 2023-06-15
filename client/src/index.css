@@ -42,3 +42,54 @@ body {
   z-index: 0;
 }
 
+.word-container {
+  transition: transform 0.25s ease; /*Adjust the transition duration to match the delay above*/
+}
+
+.animate {
+  transform: translateX(-100%); /* Adjust the distance to slide out the container*/
+}
+
+.animate-complete {
+  animation: fade-out 1s forwards, slide-left 1s forwards;
+}
+
+.animate-slide-out {
+  animation: slide-left 1s forwards;
+}
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-200px);
+  }
+}
+
+@keyframes slide-in {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-word {
+  animation: slide-out 0.3s forwards, slide-in 0.3s forwards;
+}
+
+.current-word {
+  animation: slide-out 0.3s forwards, slide-in 0.3s forwards;
+}
