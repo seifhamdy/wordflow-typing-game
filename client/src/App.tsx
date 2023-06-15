@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
 import './index.css'
 
-const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10' // API endpoint to fetch random words
+const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10'
 const wordWidth = 200 // Width of each word in pixels
 const fetchThreshold = 5 // Number of words remaining when new fetch is triggered
 
@@ -83,9 +83,8 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [startTime, setStartTime] = useState(Date.now())
   const [completedWordIndex, setCompletedWordIndex] = useState(-1)
-  const [currentWordWidth, setCurrentWordWidth] = useState(0);
-  const activeWordRef = useRef<HTMLSpanElement>(null);
-
+  const [currentWordWidth, setCurrentWordWidth] = useState(0)
+  const activeWordRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     fetchWords()
@@ -103,12 +102,14 @@ function App() {
 
   useEffect(() => {
     if (activeWordRef.current) {
-      setCurrentWordWidth(activeWordRef.current.offsetWidth);
+      setCurrentWordWidth(activeWordRef.current.offsetWidth)
       console.log(currentWordWidth)
-      document.documentElement.style.setProperty('--slide', "-"+String(currentWordWidth+8)+"px");
+      document.documentElement.style.setProperty(
+        '--slide',
+        '-' + String(currentWordWidth + 8) + 'px'
+      )
     }
-  }, [currentWordWidth, userInput]);
-  
+  }, [currentWordWidth, userInput])
 
   useEffect(() => {
     const updateWPM = () => {
@@ -131,7 +132,7 @@ function App() {
         setTimeout(() => {
           setCurrentWordIndex((prevIndex) => prevIndex + 1)
           setCompletedWordIndex(-1)
-        }, 2000)
+        }, 100)
         setScore((prevScore) => prevScore + 1)
         setUserInput('')
         setCurrentLetterIndex(0)
@@ -192,7 +193,7 @@ function App() {
   }
 
   const calculateMaxWordsInLine = () => {
-    const availableWidth = window.innerWidth * 0.9 // Use 90% of the window width
+    const availableWidth = window.innerWidth * 0.9 
     const maxWords = Math.floor(availableWidth / wordWidth) + 4
     setMaxWordsInLine(maxWords)
   }
@@ -245,7 +246,6 @@ function App() {
         )
       }
 
-      // Render extra letters in red color
       for (let k = word.length; k < word.length + extraLetters.length; k++) {
         const letter = extraLetters[k - word.length]
         const isCurrentLetter = isCurrentWord && k === currentLetterIndex
