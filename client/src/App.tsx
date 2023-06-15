@@ -29,6 +29,7 @@ const Caret: React.FC<CaretProps> = ({ currentLetterIndex, wordIndex, words }) =
           left: `${targetLetterRect.left}px`,
           width: `${targetLetterRect.width}px`,
           height: `${targetLetterRect.height}px`,
+          transition: 'top 0.3s, left 0.3s, width 0.3s, height 0.3s',
         };
   
         setCaretStyle(caretStyle);
