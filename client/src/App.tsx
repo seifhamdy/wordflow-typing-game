@@ -5,7 +5,6 @@ import './index.css'
 const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10' // API endpoint to fetch random words
 const wordWidth = 200 // Width of each word in pixels
 const fetchThreshold = 5 // Number of words remaining when new fetch is triggered
-const idleTimeout = 100 // Idle time in milliseconds before stopping the WPM counter
 
 interface CaretProps {
   currentLetterIndex: number
@@ -76,20 +75,14 @@ function App() {
   const [currentLetterIndex, setCurrentLetterIndex] = useState(0)
   const [userInput, setUserInput] = useState('')
   const [wpm, setWPM] = useState(0)
-  const [startTime, setStartTime] = useState(0)
   const [score, setScore] = useState(0)
   const [maxWordsInLine, setMaxWordsInLine] = useState(0)
   const wordRef = useRef<HTMLDivElement>(null)
-  const idleTimer = useRef<NodeJS.Timeout | null>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [typingStarted, setTypingStarted] = useState(false)
-  const [lastWordCompletionTime, setLastWordCompletionTime] = useState<
-    number | null
-  >(null)
-  const [firstWordCompletionTime, setFirstWordCompletionTime] = useState<
-    number | null
-  >(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [startTime, setStartTime] = useState(Date.now());
+
 
   useEffect(() => {
     fetchWords()
@@ -106,16 +99,22 @@ function App() {
   }, [currentWordIndex])
 
   useEffect(() => {
+    const updateWPM = () => {
+      const currentTime = Date.now();
+    const elapsedTime = (currentTime - startTime) / 1000; // Elapsed time in seconds
+    const averageWPM = Math.round((score / elapsedTime) * 60);
+    setWPM(averageWPM);
+    };
+  
+    const timer = setInterval(updateWPM, 1000); // Update the WPM every second
+  
+    return () => clearInterval(timer);
+  }, [startTime, score])
+
+  useEffect(() => {
     const checkUserInput = () => {
       const currentWord = words[currentWordIndex]
       if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
-        if (score === 0) {
-          // Record completion time of the first word
-          setFirstWordCompletionTime(Date.now())
-        } else {
-          // Record completion time of subsequent words
-          setLastWordCompletionTime(Date.now())
-        }
 
         setCurrentWordIndex((prevIndex) => prevIndex + 1)
         setScore((prevScore) => prevScore + 1)
@@ -126,6 +125,7 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!typingStarted) {
         setTypingStarted(true)
+        setStartTime(Date.now());
       }
       if (event.key === ' ') {
         event.preventDefault()
@@ -164,55 +164,6 @@ function App() {
       fetchWords()
     }
   }, [currentWordIndex, words])
-
-  useEffect(() => {
-    const stopWPMCounter = () => {
-      if (
-        firstWordCompletionTime !== null &&
-        lastWordCompletionTime !== null &&
-        score > 1
-      ) {
-        const duration =
-          (lastWordCompletionTime - firstWordCompletionTime) / 1000 // Duration in seconds
-        const wpm = Math.round((score - 1) / (duration / 60)) // Subtract 1 to exclude the first incomplete word
-        setWPM(wpm)
-      }
-    }
-
-    if (score === 0 && typingStarted) {
-      // Start the WPM counter when the user starts typing
-      setStartTime(Date.now())
-      setFirstWordCompletionTime(null)
-      setLastWordCompletionTime(null)
-      idleTimer.current = setInterval(stopWPMCounter, idleTimeout)
-    } else if (score > 0 && idleTimer.current !== null) {
-      // Restart the WPM counter if the user continues typing
-      clearInterval(idleTimer.current)
-      idleTimer.current = setInterval(stopWPMCounter, idleTimeout)
-    }
-
-    // Cleanup timer on unmount
-    return () => {
-      if (idleTimer.current !== null) {
-        clearInterval(idleTimer.current)
-      }
-    }
-  }, [
-    score,
-    typingStarted,
-    firstWordCompletionTime,
-    lastWordCompletionTime,
-    startTime,
-  ])
-
-  useEffect(() => {
-    return () => {
-      // Cleanup the idle timer on component unmount
-      if (idleTimer.current) {
-        clearInterval(idleTimer.current)
-      }
-    }
-  }, [])
 
   const fetchWords = async () => {
     setIsLoaded(false)
