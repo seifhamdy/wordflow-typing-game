@@ -21,7 +21,7 @@ const Caret: React.FC<CaretProps> = ({ currentLetterIndex, wordIndex, words }) =
       const targetLetterId = `letter-${wordIndex}-${currentLetterIndex}`;
       const targetLetter = document.getElementById(targetLetterId);
       const caretElement = caretRef.current;
-
+  
       if (targetLetter && caretElement) {
         const targetLetterRect = targetLetter.getBoundingClientRect();
         const caretStyle = {
@@ -30,25 +30,25 @@ const Caret: React.FC<CaretProps> = ({ currentLetterIndex, wordIndex, words }) =
           width: `${targetLetterRect.width}px`,
           height: `${targetLetterRect.height}px`,
         };
-
+  
         setCaretStyle(caretStyle);
       }
     };
-
+  
     updateCaretPosition();
     window.addEventListener('resize', updateCaretPosition);
     return () => {
       window.removeEventListener('resize', updateCaretPosition);
     };
-  }, [currentLetterIndex, wordIndex]);
+  }, [currentLetterIndex, wordIndex, words]);
 
   useEffect(() => {
     const currentWord = words[wordIndex];
-
-    if (currentLetterIndex >= currentWord.length) {
+  
+    if (currentWord && currentLetterIndex >= currentWord.length) {
       setCaretStyle({});
     }
-  }, [currentLetterIndex, wordIndex, words]);
+  }, [currentLetterIndex, wordIndex, words]);  
 
   return (
     <span
@@ -102,14 +102,15 @@ function App() {
         event.preventDefault();
         checkUserInput();
       } else if (event.key === 'Backspace' && userInput.length > 0) {
-        setUserInput(userInput.slice(0, -1));
+        setUserInput((prevInput) => prevInput.slice(0, -1));
         setCurrentLetterIndex(currentLetterIndex - 1);
       } else if (event.key.length === 1 && /^[a-zA-Z]+$/.test(event.key)) {
         const lowerCaseInput = event.key.toLowerCase(); // Convert input to lowercase
-        setUserInput(userInput + lowerCaseInput);
+        setUserInput((prevInput) => prevInput + lowerCaseInput);
         setCurrentLetterIndex(currentLetterIndex + 1);
       }
     };
+    
     
 
     window.addEventListener('keydown', handleKeyDown);
