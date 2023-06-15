@@ -6,6 +6,63 @@ const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10'; // API en
 const wordWidth = 200; // Width of each word in pixels
 const fetchThreshold = 5; // Number of words remaining when new fetch is triggered
 
+interface CaretProps {
+  currentLetterIndex: number;
+  wordIndex: number;
+  words: string[];
+}
+
+const Caret: React.FC<CaretProps> = ({ currentLetterIndex, wordIndex, words }) => {
+  const caretRef = useRef<HTMLSpanElement>(null);
+  const [caretStyle, setCaretStyle] = useState<React.CSSProperties>({});
+
+  useEffect(() => {
+    const updateCaretPosition = () => {
+      const targetLetterId = `letter-${wordIndex}-${currentLetterIndex}`;
+      const targetLetter = document.getElementById(targetLetterId);
+      const caretElement = caretRef.current;
+
+      if (targetLetter && caretElement) {
+        const targetLetterRect = targetLetter.getBoundingClientRect();
+        const caretStyle = {
+          top: `${targetLetterRect.top}px`,
+          left: `${targetLetterRect.left}px`,
+          width: `${targetLetterRect.width}px`,
+          height: `${targetLetterRect.height}px`,
+        };
+
+        setCaretStyle(caretStyle);
+      }
+    };
+
+    updateCaretPosition();
+    window.addEventListener('resize', updateCaretPosition);
+    return () => {
+      window.removeEventListener('resize', updateCaretPosition);
+    };
+  }, [currentLetterIndex, wordIndex]);
+
+  useEffect(() => {
+    const currentWord = words[wordIndex];
+
+    if (currentLetterIndex >= currentWord.length) {
+      setCaretStyle({});
+    }
+  }, [currentLetterIndex, wordIndex, words]);
+
+  return (
+    <span
+      ref={caretRef as React.RefObject<HTMLSpanElement>}
+      className={`absolute bg-blue-500 ${Object.keys(caretStyle).length === 0 ? 'hidden' : ''}`}
+      style={{
+        transition: 'left 0.2s ease-in-out',
+        ...caretStyle,
+      }}
+    />
+  );
+};
+
+
 function App() {
   const [words, setWords] = useState<string[]>([]);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -48,10 +105,12 @@ function App() {
         setUserInput(userInput.slice(0, -1));
         setCurrentLetterIndex(currentLetterIndex - 1);
       } else if (event.key.length === 1 && /^[a-zA-Z]+$/.test(event.key)) {
-        setUserInput(userInput + event.key);
+        const lowerCaseInput = event.key.toLowerCase(); // Convert input to lowercase
+        setUserInput(userInput + lowerCaseInput);
         setCurrentLetterIndex(currentLetterIndex + 1);
       }
     };
+    
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -112,10 +171,9 @@ function App() {
         renderedWord.push(
           <span
             key={j}
+            id={`letter-${i + currentWordIndex}-${j}`}
             className={`inline-block ${
-              isCurrentLetter
-                ? 'bg-yellow-200'
-                : isCorrectLetter
+              isCorrectLetter
                 ? 'text-green-500'
                 : isIncorrectLetter
                 ? 'text-red-500'
@@ -123,11 +181,7 @@ function App() {
             }`}
           >
             <span className={isCurrentLetter ? 'animate-blink' : ''}>
-              {isCorrectLetter
-                ? userInput[j]
-                : isIncorrectLetter
-                ? userInput[j]
-                : letter}
+              {isCorrectLetter || isIncorrectLetter ? userInput[j] : letter}
             </span>
           </span>
         );
@@ -142,12 +196,9 @@ function App() {
         renderedWord.push(
           <span
             key={k}
+            id={`letter-${i + currentWordIndex}-${k}`}
             className={`inline-block ${
-              isCurrentLetter
-                ? 'bg-yellow-200'
-                : isIncorrectLetter
-                ? 'text-red-500'
-                : 'text-black'
+              isIncorrectLetter ? 'text-red-500' : 'text-black'
             }`}
           >
             <span className={isCurrentLetter ? 'animate-blink' : ''}>
@@ -181,8 +232,14 @@ function App() {
       <div className="text-4xl text-center">
         <div>
           Score: <span className="font-bold">{score}</span>
+          
         </div>
         <div className="flex space-x-2">{renderWordsInLine()}</div>
+        <Caret
+        currentLetterIndex={currentLetterIndex}
+        wordIndex={currentWordIndex}
+        words={words}
+      />
       </div>
     </div>
   );

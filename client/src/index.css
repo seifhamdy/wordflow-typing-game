@@ -2,102 +2,41 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* index.css */
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: #f7fafc;
+}
+
+.container {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.outline-none:focus {
+  outline: none;
+}
+
+.animate-blink {
+  animation: blink 0.7s infinite;
+}
+
 @keyframes blink {
   50% {
     opacity: 0;
   }
 }
 
-.animate-blink {
-  animation: blink 0.8s linear infinite;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin: 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.flex {
-  display: flex;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.h-screen {
-  height: 100vh;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
-
-.text-4xl {
-  font-size: 2.25rem;
-}
-
-.font-bold {
-  font-weight: bold;
-}
-
-.mr-2 {
-  margin-right: 0.5rem;
-}
-
-.space-x-2 > * + * {
-  margin-left: 0.5rem;
-}
-
 .inline-block {
-  display: inline-block;
+  position: relative;
+  z-index: 1;
 }
 
-.bg-yellow-200 {
-  background-color: #fde047;
-}
-
-.text-green-500 {
-  color: #22c55e;
-}
-
-.text-red-500 {
-  color: #ef4444;
-}
-
-.text-black {
-  color: #000000;
-}
-
-.text-gray-500 {
-  color: #6b7280;
+.Caret {
+  position: absolute;
+  z-index: 0;
 }
