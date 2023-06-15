@@ -83,6 +83,9 @@ function App() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [startTime, setStartTime] = useState(Date.now())
   const [completedWordIndex, setCompletedWordIndex] = useState(-1)
+  const [currentWordWidth, setCurrentWordWidth] = useState(0);
+  const activeWordRef = useRef<HTMLSpanElement>(null);
+
 
   useEffect(() => {
     fetchWords()
@@ -97,6 +100,15 @@ function App() {
     setCurrentLetterIndex(0)
     setUserInput('')
   }, [currentWordIndex])
+
+  useEffect(() => {
+    if (activeWordRef.current) {
+      setCurrentWordWidth(activeWordRef.current.offsetWidth);
+      console.log(currentWordWidth)
+      document.documentElement.style.setProperty('--slide', "-"+String(currentWordWidth+8)+"px");
+    }
+  }, [currentWordWidth, userInput]);
+  
 
   useEffect(() => {
     const updateWPM = () => {
@@ -266,6 +278,7 @@ function App() {
               ? 'animate-slide-out'
               : ''
           }`}
+          ref={isCurrentWord ? activeWordRef : undefined}
         >
           {renderedWord}
         </span>

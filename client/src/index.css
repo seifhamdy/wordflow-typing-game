@@ -4,6 +4,10 @@
 
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
 
+:root {
+  --slide: -200px
+}
+
 body {
   font-family: 'Open Sans', sans-serif;
   background-color: #f7fafc;
@@ -71,7 +75,7 @@ body {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-200px);
+    transform: translateX(var(--slide));
   }
 }
 
