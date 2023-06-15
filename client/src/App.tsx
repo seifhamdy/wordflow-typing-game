@@ -1,175 +1,255 @@
-import React, { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
-import './index.css';
+import React, { useEffect, useState, useRef } from 'react'
+import axios from 'axios'
+import './index.css'
 
-const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10'; // API endpoint to fetch random words
-const wordWidth = 200; // Width of each word in pixels
-const fetchThreshold = 5; // Number of words remaining when new fetch is triggered
+
+const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10' // API endpoint to fetch random words
+const wordWidth = 200 // Width of each word in pixels
+const fetchThreshold = 5 // Number of words remaining when new fetch is triggered
+const idleTimeout = 100 // Idle time in milliseconds before stopping the WPM counter
 
 interface CaretProps {
-  currentLetterIndex: number;
-  wordIndex: number;
-  words: string[];
+  currentLetterIndex: number
+  wordIndex: number
+  words: string[]
 }
 
-const Caret: React.FC<CaretProps> = ({ currentLetterIndex, wordIndex, words }) => {
-  const caretRef = useRef<HTMLSpanElement>(null);
-  const [caretStyle, setCaretStyle] = useState<React.CSSProperties>({});
+const Caret: React.FC<CaretProps> = ({
+  currentLetterIndex,
+  wordIndex,
+  words,
+}) => {
+  const caretRef = useRef<HTMLSpanElement>(null)
+  const [caretStyle, setCaretStyle] = useState<React.CSSProperties>({})
 
   useEffect(() => {
     const updateCaretPosition = () => {
-      const targetLetterId = `letter-${wordIndex}-${currentLetterIndex}`;
-      const targetLetter = document.getElementById(targetLetterId);
-      const caretElement = caretRef.current;
-  
+      const targetLetterId = `letter-${wordIndex}-${currentLetterIndex}`
+      const targetLetter = document.getElementById(targetLetterId)
+      const caretElement = caretRef.current
+
       if (targetLetter && caretElement) {
-        const targetLetterRect = targetLetter.getBoundingClientRect();
+        const targetLetterRect = targetLetter.getBoundingClientRect()
         const caretStyle = {
           top: `${targetLetterRect.top}px`,
           left: `${targetLetterRect.left}px`,
           width: `${targetLetterRect.width}px`,
           height: `${targetLetterRect.height}px`,
           transition: 'top 0.3s, left 0.3s, width 0.3s, height 0.3s',
-        };
-  
-        setCaretStyle(caretStyle);
+        }
+
+        setCaretStyle(caretStyle)
       }
-    };
-  
-    updateCaretPosition();
-    window.addEventListener('resize', updateCaretPosition);
+    }
+
+    updateCaretPosition()
+    window.addEventListener('resize', updateCaretPosition)
     return () => {
-      window.removeEventListener('resize', updateCaretPosition);
-    };
-  }, [currentLetterIndex, wordIndex, words]);
+      window.removeEventListener('resize', updateCaretPosition)
+    }
+  }, [currentLetterIndex, wordIndex, words])
 
   useEffect(() => {
-    const currentWord = words[wordIndex];
-  
+    const currentWord = words[wordIndex]
+
     if (currentWord && currentLetterIndex >= currentWord.length) {
-      setCaretStyle({});
+      setCaretStyle({})
     }
-  }, [currentLetterIndex, wordIndex, words]);  
+  }, [currentLetterIndex, wordIndex, words])
 
   return (
     <span
       ref={caretRef as React.RefObject<HTMLSpanElement>}
-      className={`absolute bg-blue-500 ${Object.keys(caretStyle).length === 0 ? 'hidden' : ''}`}
+      className={`absolute bg-blue-500 ${
+        Object.keys(caretStyle).length === 0 ? 'hidden' : ''
+      }`}
       style={{
         transition: 'left 0.2s ease-in-out',
         ...caretStyle,
       }}
     />
-  );
-};
-
+  )
+}
 
 function App() {
-  const [words, setWords] = useState<string[]>([]);
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [currentLetterIndex, setCurrentLetterIndex] = useState(0);
-  const [userInput, setUserInput] = useState('');
-  const [score, setScore] = useState(0);
-  const [maxWordsInLine, setMaxWordsInLine] = useState(0);
-  const wordRef = useRef<HTMLDivElement>(null);
+  const [words, setWords] = useState<string[]>([])
+  const [currentWordIndex, setCurrentWordIndex] = useState(0)
+  const [currentLetterIndex, setCurrentLetterIndex] = useState(0)
+  const [userInput, setUserInput] = useState('')
+  const [wpm, setWPM] = useState(0)
+  const [startTime, setStartTime] = useState(0)
+  const [score, setScore] = useState(0)
+  const [maxWordsInLine, setMaxWordsInLine] = useState(0)
+  const wordRef = useRef<HTMLDivElement>(null)
+  const idleTimer = useRef<NodeJS.Timeout | null>(null)
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [typingStarted, setTypingStarted] = useState(false);
+  const [lastWordCompletionTime, setLastWordCompletionTime] = useState<number | null>(null);
+  const [firstWordCompletionTime, setFirstWordCompletionTime] = useState<number | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+
+  
+
+
 
   useEffect(() => {
-    fetchWords();
-    calculateMaxWordsInLine();
-    window.addEventListener('resize', calculateMaxWordsInLine);
+    fetchWords()
+    calculateMaxWordsInLine()
+    window.addEventListener('resize', calculateMaxWordsInLine)
     return () => {
-      window.removeEventListener('resize', calculateMaxWordsInLine);
-    };
-  }, []);
+      window.removeEventListener('resize', calculateMaxWordsInLine)
+    }
+  }, [])
 
   useEffect(() => {
-    setCurrentLetterIndex(0);
+    setCurrentLetterIndex(0)
+    setUserInput('')
+  }, [currentWordIndex])
+
+  useEffect(() => {
+    
+const checkUserInput = () => {
+  const currentWord = words[currentWordIndex];
+  if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
+    if (score === 0) {
+      // Record completion time of the first word
+      setFirstWordCompletionTime(Date.now());
+    } else {
+      // Record completion time of subsequent words
+      setLastWordCompletionTime(Date.now());
+    }
+
+    setCurrentWordIndex((prevIndex) => prevIndex + 1);
+    setScore((prevScore) => prevScore + 1);
     setUserInput('');
-  }, [currentWordIndex]);
-
-  useEffect(() => {
-    const checkUserInput = () => {
-      const currentWord = words[currentWordIndex];
-      if (userInput.trim().toLowerCase() === currentWord.toLowerCase()) {
-        setCurrentWordIndex((prevIndex) => prevIndex + 1);
-        setScore((prevScore) => prevScore + 1);
-        setUserInput('');
-        setCurrentLetterIndex(0);
-      }
-    };
-
+    setCurrentLetterIndex(0);
+  }
+};
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (!typingStarted) {
+        setTypingStarted(true);
+      }    
       if (event.key === ' ') {
-        event.preventDefault();
-        checkUserInput();
+        event.preventDefault()
+        checkUserInput()
       } else if (event.key === 'Backspace' && userInput.length > 0) {
-        setUserInput((prevInput) => prevInput.slice(0, -1));
-        setCurrentLetterIndex(currentLetterIndex - 1);
+        setUserInput((prevInput) => prevInput.slice(0, -1))
+        setCurrentLetterIndex(currentLetterIndex - 1)
       } else if (event.key.length === 1 && /^[a-zA-Z]+$/.test(event.key)) {
-        const lowerCaseInput = event.key.toLowerCase(); // Convert input to lowercase
-        setUserInput((prevInput) => prevInput + lowerCaseInput);
-        setCurrentLetterIndex(currentLetterIndex + 1);
+        const lowerCaseInput = event.key.toLowerCase() // Convert input to lowercase
+        setUserInput((prevInput) => prevInput + lowerCaseInput)
+        setCurrentLetterIndex(currentLetterIndex + 1)
       }
-    };
-    
-    
+    }
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown)
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [currentWordIndex, userInput, currentLetterIndex, words]);
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [currentWordIndex, userInput, currentLetterIndex, words, typingStarted, score])
 
   useEffect(() => {
     if (wordRef.current) {
-      wordRef.current.focus();
+      wordRef.current.focus()
     }
-  }, [currentWordIndex]);
+  }, [currentWordIndex])
 
   useEffect(() => {
     if (words.length - currentWordIndex <= fetchThreshold) {
-      fetchWords();
+      fetchWords()
     }
-  }, [currentWordIndex, words]);
+  }, [currentWordIndex, words])
+
+  useEffect(() => {
+    const stopWPMCounter = () => {
+      if (firstWordCompletionTime !== null && lastWordCompletionTime !== null && score > 1) {
+        const duration = (lastWordCompletionTime - firstWordCompletionTime) / 1000; // Duration in seconds
+        const wpm = Math.round((score - 1) / (duration / 60)); // Subtract 1 to exclude the first incomplete word
+        setWPM(wpm);
+      }
+    };
+  
+    if (score === 0 && typingStarted) {
+      // Start the WPM counter when the user starts typing
+      setStartTime(Date.now());
+      setFirstWordCompletionTime(null);
+      setLastWordCompletionTime(null);
+      idleTimer.current = setInterval(stopWPMCounter, idleTimeout);
+    } else if (score > 0 && idleTimer.current !== null) {
+      // Restart the WPM counter if the user continues typing
+      clearInterval(idleTimer.current);
+      idleTimer.current = setInterval(stopWPMCounter, idleTimeout);
+    }
+  
+    // Cleanup timer on unmount
+    return () => {
+      if (idleTimer.current !== null) {
+        clearInterval(idleTimer.current);
+      }
+    };
+  }, [score, typingStarted, firstWordCompletionTime, lastWordCompletionTime, startTime]);
+  
+  
+  
+  
+
+  useEffect(() => {
+    return () => {
+      // Cleanup the idle timer on component unmount
+      if (idleTimer.current) {
+        clearInterval(idleTimer.current)
+      }
+    }
+  }, [])
+
 
   const fetchWords = async () => {
+    setIsLoaded(false);
     try {
-      const response = await axios.get(apiUrl);
-      setWords((prevWords) => [...prevWords, ...response.data]);
+      const response = await axios.get(apiUrl)
+      setWords((prevWords) => [...prevWords, ...response.data])
+      setIsLoaded(true);
     } catch (error) {
-      console.error('Error fetching words:', error);
+      console.error('Error fetching words:', error)
     }
-  };
+  }
 
   const calculateMaxWordsInLine = () => {
-    const availableWidth = window.innerWidth * 0.9; // Use 90% of the window width
-    const maxWords = Math.floor(availableWidth / wordWidth);
-    setMaxWordsInLine(maxWords);
-  };
+    const availableWidth = window.innerWidth * 0.9 // Use 90% of the window width
+    const maxWords = Math.floor(availableWidth / wordWidth) + 4
+    setMaxWordsInLine(maxWords)
+  }
+
+  useEffect(() => {
+    const longestWordLength = Math.max(...words.map((word) => word.length));
+    const containerWidth = longestWordLength * wordWidth;
+    setContainerWidth(containerWidth);
+  }, [words]);
 
   const renderWordsInLine = () => {
-    const renderedWords: JSX.Element[] = [];
-  
+    const renderedWords: JSX.Element[] = []
+
     for (let i = 0; i < maxWordsInLine && i < words.length; i++) {
-      const word = words[i + currentWordIndex];
-      if (!word) break;
-  
-      const isCurrentWord = i === 0;
-      const extraLetters = isCurrentWord ? userInput.slice(word.length) : '';
-  
-      const renderedWord: JSX.Element[] = [];
+      const word = words[i + currentWordIndex]
+      if (!word) break
+
+      const isCurrentWord = i === 0
+      const extraLetters = isCurrentWord ? userInput.slice(word.length) : ''
+
+      const renderedWord: JSX.Element[] = []
       for (let j = 0; j < word.length; j++) {
-        const letter = word[j];
-        const isCurrentLetter = isCurrentWord && j === currentLetterIndex;
+        const letter = word[j]
+        const isCurrentLetter = isCurrentWord && j === currentLetterIndex
         const isCorrectLetter =
           isCurrentWord &&
           j < userInput.length &&
-          letter.toLowerCase() === userInput[j].toLowerCase();
+          letter.toLowerCase() === userInput[j].toLowerCase()
         const isIncorrectLetter =
           isCurrentWord &&
           j < userInput.length &&
-          letter.toLowerCase() !== userInput[j].toLowerCase();
-  
+          letter.toLowerCase() !== userInput[j].toLowerCase()
+
         renderedWord.push(
           <span
             key={j}
@@ -186,15 +266,15 @@ function App() {
               {isCorrectLetter || isIncorrectLetter ? userInput[j] : letter}
             </span>
           </span>
-        );
+        )
       }
-  
+
       // Render extra letters in red color
       for (let k = word.length; k < word.length + extraLetters.length; k++) {
-        const letter = extraLetters[k - word.length];
-        const isCurrentLetter = isCurrentWord && k === currentLetterIndex;
-        const isIncorrectLetter = isCurrentWord && letter !== undefined;
-  
+        const letter = extraLetters[k - word.length]
+        const isCurrentLetter = isCurrentWord && k === currentLetterIndex
+        const isIncorrectLetter = isCurrentWord && letter !== undefined
+
         renderedWord.push(
           <span
             key={k}
@@ -207,9 +287,9 @@ function App() {
               {isIncorrectLetter ? letter : ''}
             </span>
           </span>
-        );
+        )
       }
-  
+
       renderedWords.push(
         <span
           key={i}
@@ -219,32 +299,43 @@ function App() {
         >
           {renderedWord}
         </span>
-      );
+      )
     }
-  
-    return renderedWords;
-  };  
+
+    return renderedWords
+  }
 
   return (
     <div
-      className="flex justify-center items-center h-screen"
+      className="flex justify-start items-center h-screen outline-none"
       tabIndex={0}
       ref={wordRef as React.RefObject<HTMLDivElement>}
     >
       <div className="text-4xl text-center">
-        <div>
-          Score: <span className="font-bold">{score}</span>
-          
+      {isLoaded && (
+        <>
+          <div
+          className="flex justify-start"
+          style={{ marginLeft: `${window.innerWidth * 0.125}px` }}
+        >
+          WPM: <span className="font-bold">{wpm}</span>
         </div>
-        <div className="flex space-x-2">{renderWordsInLine()}</div>
+        <div
+          className="flex space-x-2 justify-start"
+          style={{ marginLeft: `${window.innerWidth * 0.125}px`, width: `${containerWidth}px`}}
+        >
+          {renderWordsInLine()}
+        </div>
         <Caret
-        currentLetterIndex={currentLetterIndex}
-        wordIndex={currentWordIndex}
-        words={words}
-      />
+          currentLetterIndex={currentLetterIndex}
+          wordIndex={currentWordIndex}
+          words={words}
+        />
+        </>
+      )}
       </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
