@@ -23,7 +23,7 @@ In the future, if this repo gets enough attention, I might connect it to a Mongo
 
 ## Usage
 
-Visit [WordFlow]([seifhamdy.github.io/wordflow-typing-game/](https://wordflow-typing-game.vercel.app/)) and start typing. To restart, just refresh the page
+Visit [WordFlow](https://wordflow-typing-game.vercel.app/) and start typing. To restart, just refresh the page
 
 ## Roadmap
 
