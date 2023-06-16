@@ -85,7 +85,8 @@ function App() {
   const [completedWordIndex, setCompletedWordIndex] = useState(-1)
   const [currentWordWidth, setCurrentWordWidth] = useState(0)
   const activeWordRef = useRef<HTMLSpanElement>(null)
-  
+  const [darkMode, setDarkMode] = useState(false)
+
   useEffect(() => {
     fetchWords()
     calculateMaxWordsInLine()
@@ -193,7 +194,7 @@ function App() {
   }
 
   const calculateMaxWordsInLine = () => {
-    const availableWidth = window.innerWidth * 0.9 
+    const availableWidth = window.innerWidth * 0.9
     const maxWords = Math.floor(availableWidth / wordWidth) + 4
     setMaxWordsInLine(maxWords)
   }
@@ -269,9 +270,7 @@ function App() {
       renderedWords.push(
         <span
           key={i}
-          className={`mr-2 word ${
-            isCurrentWord ? 'active' : ''
-          } ${
+          className={`mr-2 word ${isCurrentWord ? 'active' : ''} ${
             completedWordIndex === i + currentWordIndex
               ? 'animate-complete'
               : completedWordIndex !== -1
@@ -279,6 +278,9 @@ function App() {
               : ''
           }`}
           ref={isCurrentWord ? activeWordRef : undefined}
+          style={{
+            color: isCurrentWord && darkMode ? 'white' : '',
+          }}
         >
           {renderedWord}
         </span>
@@ -293,15 +295,31 @@ function App() {
       className="flex justify-start items-center h-screen outline-none"
       tabIndex={0}
       ref={wordRef as React.RefObject<HTMLDivElement>}
+      style={{
+        backgroundColor: darkMode ? 'black' : 'white',
+      }}
     >
-      <div className="text-4xl text-center">
+      <div className="text-4xl text-center flex flex-col">
         {isLoaded && (
           <>
-            <div
-              className="flex justify-start word active"
-              style={{ marginLeft: `${window.innerWidth * 0.125}px` }}
+            <button
+              style={{
+                marginLeft: `${window.innerWidth * 0.125}px`,
+              }}
+              className={`button-28 ${darkMode ? 'button-29' : ''}`}
+              role="button"
+              onClick={() => setDarkMode(!darkMode)}
             >
-              WPM: <span className="word active">{wpm}</span>
+              Dark Mode
+            </button>
+            <div
+              className="flex justify-start word active align-middle mb-4"
+              style={{
+                marginLeft: `${window.innerWidth * 0.125}px`,
+                color: darkMode ? 'white' : 'black',
+              }}
+            >
+              WPM: {wpm}
             </div>
             <div
               className="flex space-x-2 justify-start"
