@@ -2,7 +2,7 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
 
 :root {
   --slide: -200px;
@@ -43,23 +43,25 @@ body {
 
 .Caret {
   position: absolute;
-  z-index: 0;
+  z-index: -1;
 }
 
 .word-container {
-  transition: transform 0.25s ease; /*Adjust the transition duration to match the delay above*/
+  transition: transform 0.1s ease; /*transition duration*/
 }
 
 .animate {
-  transform: translateX(-100%); /* Adjust the distance to slide out the container*/
+  transform: translateX(
+    -100%
+  ); /* distance to slide out the container*/
 }
 
 .animate-complete {
-  animation: fade-out 1s forwards, slide-left 1s forwards;
+  animation: fade-out 0.1s forwards, slide-left 0.1s forwards;
 }
 
 .animate-slide-out {
-  animation: slide-left 1s forwards;
+  animation: slide-left 0.1s forwards;
 }
 @keyframes fade-out {
   0% {
@@ -90,10 +92,15 @@ body {
   }
 }
 
-.animate-word {
-  animation: slide-out 0.3s forwards, slide-in 0.3s forwards;
+
+.word {
+  font-weight: 400;
+  color: rgb(124, 124, 124);
+  transition: font-weight 1s ease-in-out, color 1s ease-in-out;
 }
 
-.current-word {
-  animation: slide-out 0.3s forwards, slide-in 0.3s forwards;
+.word.active {
+  font-weight: 900;
+  color: black;
+  transition: font-weight 1s ease-in-out, color 1s ease-in-out;
 }

@@ -85,7 +85,7 @@ function App() {
   const [completedWordIndex, setCompletedWordIndex] = useState(-1)
   const [currentWordWidth, setCurrentWordWidth] = useState(0)
   const activeWordRef = useRef<HTMLSpanElement>(null)
-
+  
   useEffect(() => {
     fetchWords()
     calculateMaxWordsInLine()
@@ -236,7 +236,7 @@ function App() {
                 ? 'text-green-500'
                 : isIncorrectLetter
                 ? 'text-red-500'
-                : 'text-black'
+                : 'inherit'
             }`}
           >
             <span className={isCurrentLetter ? 'animate-blink' : ''}>
@@ -269,8 +269,8 @@ function App() {
       renderedWords.push(
         <span
           key={i}
-          className={`mr-2 ${
-            isCurrentWord ? 'font-bold text-black ' : 'text-gray-500'
+          className={`mr-2 word ${
+            isCurrentWord ? 'active' : ''
           } ${
             completedWordIndex === i + currentWordIndex
               ? 'animate-complete'
@@ -298,10 +298,10 @@ function App() {
         {isLoaded && (
           <>
             <div
-              className="flex justify-start"
+              className="flex justify-start word active"
               style={{ marginLeft: `${window.innerWidth * 0.125}px` }}
             >
-              WPM: <span className="font-bold">{wpm}</span>
+              WPM: <span className="word active">{wpm}</span>
             </div>
             <div
               className="flex space-x-2 justify-start"
