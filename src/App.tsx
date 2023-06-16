@@ -85,7 +85,7 @@ function App() {
   const [completedWordIndex, setCompletedWordIndex] = useState(-1)
   const [currentWordWidth, setCurrentWordWidth] = useState(0)
   const activeWordRef = useRef<HTMLSpanElement>(null)
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(true)
 
   useEffect(() => {
     fetchWords()
@@ -310,7 +310,7 @@ function App() {
               role="button"
               onClick={() => setDarkMode(!darkMode)}
             >
-              Dark Mode
+              {darkMode ? 'Light mode' : 'Dark mode'}
             </button>
             <div
               className="flex justify-start word active align-middle mb-4"
