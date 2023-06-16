@@ -4,7 +4,7 @@ import './index.css'
 
 const apiUrl = 'https://random-word-api.herokuapp.com/word?number=10'
 const wordWidth = 200 // Width of each word in pixels
-const fetchThreshold = 5 // Number of words remaining when new fetch is triggered
+const fetchThreshold = 20 // Number of words remaining when new fetch is triggered
 
 interface CaretProps {
   currentLetterIndex: number
