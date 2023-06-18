@@ -183,7 +183,6 @@ function App() {
   }, [currentWordIndex, words])
 
   const fetchWords = async () => {
-    setIsLoaded(false)
     try {
       const response = await axios.get(apiUrl)
       setWords((prevWords) => [...prevWords, ...response.data])
